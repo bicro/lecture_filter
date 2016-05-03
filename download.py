@@ -6,7 +6,6 @@ import os
 fname = "links.txt"
 
 def setup():
-    #sets up all the needed directories
     if not os.path.exists('lectures/'):
         os.makedirs('lectures/')
     if not os.path.exists('tmp/'):
@@ -14,16 +13,27 @@ def setup():
     if not os.path.exists('cleaned_lectures/'):
         os.makedirs('cleaned_lectures/')
 
+def cleanup():
+    if "temp.mp3" in os.listdir("tmp"):
+        os.remove("tmp/temp.mp3")
+    if "temp1.mp3" in os.listdir("tmp"):
+        os.remove("tmp/temp1.mp3")
+
 def main():
 
     setup()
+    cleanup()
 
-    Phase 1: Download all youtube videos specified in the "links.txt" file
+    #Phase 1: Download all youtube videos specified in the "links.txt" file
     with open(fname) as f:
         lecture_links = f.readlines()
         for link in lecture_links:
             yt = YouTube(link)
             video = yt.filter('mp4')[-1]
+            print yt.filename + ".mp4"
+            if yt.filename + ".mp4" in os.listdir('lectures'):
+                print "Skipping Download"
+                continue
             print "starting - " + str(video) + str(yt.filename)
             video.download('lectures/')
             print "done download"
@@ -33,8 +43,8 @@ def main():
         if filename.endswith('.mp4'):
             #check if file has already been converted
             if filename in os.listdir('cleaned_lectures'):
-                print "Passing"
-                pass
+                print "Skipping Conversion"
+                continue
 
             filename = filename[:-4]
             call(["ffmpeg", "-i", "lectures/" + filename + ".mp4", "tmp/temp.mp3"])
@@ -45,11 +55,9 @@ def main():
             print "done merging with original"
 
             #cleanup
-            os.remove("tmp/temp.mp3")
-            os.remove("tmp/temp1.mp3")
+            cleanup()
 
             print "done" + str(filename)
-            break
 
 if __name__ == "__main__":
     main()
